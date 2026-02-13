@@ -150,7 +150,7 @@
     <div class="st">C Y B E R P U N K &nbsp; R A C E R</div>
     <div id="ssLB"></div>
     <button class="bt" id="sb">START</button>
-    <div class="ky">← → 방향키 또는 A D 키로 조작</div>
+    <div class="ky">↑ ↓ ← → 방향키 또는 W A S D 키로 조작</div>
   </div>
   <div class="ov" id="os">
     <div class="tt" style="font-size:30px">WASTED</div>
@@ -316,10 +316,10 @@ document.addEventListener('keyup',e=>{kp[e.key]=0});
 document.getElementById('sb').onclick=startGame;
 document.getElementById('rb').onclick=restart;
 document.getElementById('niBtn').onclick=submitName;
-let touchX=null;
-canvas.addEventListener('touchstart',e=>{e.preventDefault();touchX=e.touches[0].clientX});
-canvas.addEventListener('touchmove',e=>{e.preventDefault();if(touchX!==null){const d=e.touches[0].clientX-touchX;if(Math.abs(d)>8){car.x+=d>0?5:-5;touchX=e.touches[0].clientX}}});
-canvas.addEventListener('touchend',()=>touchX=null);
+let touchX=null,touchY=null;
+canvas.addEventListener('touchstart',e=>{e.preventDefault();touchX=e.touches[0].clientX;touchY=e.touches[0].clientY});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();if(touchX!==null){const dx=e.touches[0].clientX-touchX,dy=e.touches[0].clientY-touchY;if(Math.abs(dx)>8){car.x+=dx>0?5:-5;touchX=e.touches[0].clientX}if(Math.abs(dy)>8){car.y+=dy>0?5:-5;touchY=e.touches[0].clientY}}});
+canvas.addEventListener('touchend',()=>{touchX=null;touchY=null});
 
 function showNameInput(sc){pendingScore=sc;document.getElementById('niScore').textContent=sc;document.getElementById('niInput').value='';document.getElementById('ni').style.display='flex';setTimeout(()=>document.getElementById('niInput').focus(),100)}
 function submitName(){let name=document.getElementById('niInput').value.trim();if(!name)name='RACER';if(name.length>8)name=name.slice(0,8);document.getElementById('ni').style.display='none';lbInsert(name,pendingScore);showGameOver(pendingScore);pendingScore=null}
@@ -393,7 +393,21 @@ function collides(a,b){const pad=6;return Math.abs(a.x-b.x)<(a.w/2+b.w/2-pad)&&M
 function loop(gen){
   if(gen!==generation)return;
   frame++;
-  if(run){const mv=5.5;if(kp['ArrowLeft']||kp['a']||kp['A'])car.x-=mv;if(kp['ArrowRight']||kp['d']||kp['D'])car.x+=mv;car.x=Math.max(ROAD_L+car.w/2+6,Math.min(ROAD_R-car.w/2-6,car.x))}
+  if(run){
+    const mv=5.5;
+    let dx=0,dy=0;
+    if(kp['ArrowLeft']||kp['a']||kp['A']) dx=-1;
+    if(kp['ArrowRight']||kp['d']||kp['D']) dx=1;
+    if(kp['ArrowUp']||kp['w']||kp['W']) dy=-1;
+    if(kp['ArrowDown']||kp['s']||kp['S']) dy=1;
+    // ★ 대각선 이동 시 √2 보정 (속도 일정)
+    if(dx!==0&&dy!==0){dx*=0.7071;dy*=0.7071}
+    car.x+=dx*mv; car.y+=dy*mv;
+    // ★ X축 범위: 도로 안쪽
+    car.x=Math.max(ROAD_L+car.w/2+6,Math.min(ROAD_R-car.w/2-6,car.x));
+    // ★ Y축 범위: 상단 116 ~ 하단 714 (전광판 아래 ~ 화면 하단)
+    car.y=Math.max(car.h/2+80,Math.min(H-car.h/2-10,car.y));
+  }
   if(run){
     const lv=Math.floor(score/20);
     speed=1.5+lv*0.8;     // ★★ 숫자 리터럴 1.5 기반 계산

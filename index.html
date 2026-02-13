@@ -25,6 +25,13 @@
   .lu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:#0ff;text-shadow:0 0 30px #0ff,0 0 60px rgba(0,255,255,0.4);pointer-events:none;z-index:5;opacity:0;transition:opacity .3s}
   .music-btn{position:absolute;bottom:10px;right:14px;z-index:3;background:rgba(5,5,20,0.7);border:1px solid rgba(168,85,247,0.3);border-radius:4px;padding:4px 10px;color:rgba(168,85,247,0.7);font:11px 'Orbitron',monospace;cursor:pointer;transition:all .2s;text-shadow:0 0 4px rgba(168,85,247,0.3)}
   .music-btn:hover{border-color:#a855f7;color:#a855f7}
+  /* ═══ 하트 UI ═══ */
+  .hearts{display:flex;gap:3px;align-items:center}
+  .ht{font-size:16px;transition:all .3s;filter:drop-shadow(0 0 6px rgba(255,0,170,0.6))}
+  .ht.on{color:#ff00aa;text-shadow:0 0 8px rgba(255,0,170,0.5)}
+  .ht.off{color:rgba(60,20,40,0.5);filter:none;transform:scale(0.85);text-shadow:none}
+  .ht.pop{animation:htPop .4s ease-out}
+  @keyframes htPop{0%{transform:scale(1.4);filter:drop-shadow(0 0 14px #ff00aa)}100%{transform:scale(0.85);filter:none}}
   /* 리더보드 */
   .lb-wrap{width:260px;margin:10px auto 4px;padding:10px 0 6px;background:rgba(5,3,20,0.6);border:1px solid rgba(0,255,255,0.12);border-radius:6px;box-shadow:0 0 20px rgba(0,255,255,0.04),inset 0 0 30px rgba(0,0,0,0.3)}
   .lb-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#a855f7;letter-spacing:3px;text-align:center;text-shadow:0 0 8px rgba(168,85,247,0.4);margin-bottom:8px;text-transform:uppercase}
@@ -122,7 +129,11 @@
 <body>
 <div id="wrap">
   <canvas id="c"></canvas>
-  <div id="hud"><div class="hb">SCORE <span id="sv">0</span></div><div class="hb">SPEED <span id="sp">60</span> km/h</div></div>
+  <div id="hud">
+    <div class="hb"><div class="hearts"><span class="ht on" id="h0">♥</span><span class="ht on" id="h1">♥</span><span class="ht on" id="h2">♥</span></div></div>
+    <div class="hb">SCORE <span id="sv">0</span></div>
+    <div class="hb">SPEED <span id="sp">60</span> km/h</div>
+  </div>
   <div class="lu" id="lu">SPEED UP!</div>
   <button class="music-btn" id="musicBtn">♫ ON</button>
 
@@ -294,6 +305,7 @@ let generation=0;
 let run=0,dead=0,score=0,speed=1.5,frame=0,lastLv=0,roadOff=0,gridOff=0;
 const kp={};const car={x:W/2,y:H-110,w:38,h:72};
 let obstacles=[],particles=[],pendingScore=null;
+let lives=3,invincible=0,invTimer=0;
 
 // ═══ 리더보드 ═══
 function lbLoad(){try{const d=localStorage.getItem(LB_KEY);if(d){const a=JSON.parse(d);if(Array.isArray(a))return a.slice(0,LB_MAX)}}catch(e){}return[]}
@@ -345,6 +357,9 @@ function resetAll(){
 
   obstacles = [];      // ★ 장애물 전부 제거
   particles = [];      // 파티클 전부 제거
+  lives     = 3;       // ★ 생명 풀 충전
+  invincible= 0;       // ★ 무적 해제
+  invTimer  = 0;       // ★ 무적 타이머 0
 
   // 키 상태 전체 초기화 (누르던 키 해제)
   for(const k in kp) kp[k] = 0;
@@ -354,6 +369,7 @@ function resetAll(){
 
   document.getElementById('sv').textContent = '0';
   document.getElementById('sp').textContent = '60';
+  updateHearts();        // ★ 하트 UI 복원
 }
 
 function startGame(){
@@ -369,6 +385,38 @@ function restart(){
   resetAll();
   playMusic();
   requestAnimationFrame(()=>loop(generation));
+}
+// ═══ 하트 UI 업데이트 ═══
+function updateHearts(){
+  for(let i=0;i<3;i++){
+    const el=document.getElementById('h'+i);
+    if(i<lives){el.className='ht on'}
+    else{el.className='ht off'}
+  }
+}
+function popHeart(idx){
+  const el=document.getElementById('h'+idx);
+  el.className='ht off pop';
+}
+
+// ═══ 충돌 처리 (생명 시스템) ═══
+function hit(hitObs){
+  if(invincible)return;      // 무적 중이면 무시
+  lives--;
+  popHeart(lives);           // 하트 애니메이션
+  // 작은 파티클 (피격 효과)
+  for(let i=0;i<15;i++)particles.push({x:car.x,y:car.y+car.h/2,vx:(Math.random()-.5)*7,vy:(Math.random()-.5)*7,r:1.5+Math.random()*3,life:0.7,c:['#ff00aa','#a855f7','#fff'][~~(Math.random()*3)]});
+  // 부딪힌 장애물 제거
+  const idx=obstacles.indexOf(hitObs);
+  if(idx!==-1)obstacles.splice(idx,1);
+
+  if(lives<=0){
+    die();  // 생명 0 → 게임 오버
+  } else {
+    // 무적 시작: 1.5초 (90프레임 @60fps)
+    invincible=1;
+    invTimer=90;
+  }
 }
 function die(){
   dead=1;run=0;
@@ -419,13 +467,30 @@ function loop(gen){
     obstacles[i].y+=speed*2;
     if(obstacles[i].y>H+60){obstacles.splice(i,1);if(run){score++;document.getElementById('sv').textContent=score;document.getElementById('sp').textContent=Math.floor(60+Math.floor(score/20)*30)}}
   }
-  if(run)for(const o of obstacles){if(collides(car,o)){die();break}}
+  // ★ 무적 타이머 카운트다운
+  if(invincible){invTimer--;if(invTimer<=0){invincible=0;invTimer=0}}
+  // ★ 충돌 → hit() (생명 시스템)
+  if(run&&!invincible)for(const o of obstacles){if(collides(car,o)){hit(o);break}}
   for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.life-=.02;if(p.life<=0)particles.splice(i,1)}
   if(run||dead){updBld(bldL,'l');updBld(bldR,'r')}
   ctx.clearRect(0,0,W,H);drawBg();drawRoad();drawScrollBld(bldL);drawScrollBld(bldR);drawMono();
   for(const o of obstacles){ctx.fillStyle='rgba(168,85,247,.03)';ctx.beginPath();ctx.ellipse(o.x+3,o.y+o.h/2+5,o.w/2,5,0,0,6.28);ctx.fill()}
   for(const o of obstacles)drawObs(o);
-  if(!dead){drawCar(car.x,car.y);if(frame%3<2){const fl=Math.random()*8+5;const eg=ctx.createLinearGradient(car.x,car.y+car.h-8,car.x,car.y+car.h+fl);eg.addColorStop(0,'rgba(0,255,255,.6)');eg.addColorStop(.4,'rgba(168,85,247,.35)');eg.addColorStop(1,'transparent');ctx.fillStyle=eg;ctx.beginPath();ctx.moveTo(car.x-3,car.y+car.h-8);ctx.lineTo(car.x+3,car.y+car.h-8);ctx.lineTo(car.x+(Math.random()-.5)*4,car.y+car.h+fl);ctx.closePath();ctx.fill()}}
+  if(!dead){
+    // ★ 무적 깜빡임: 6프레임 주기로 ON/OFF
+    const showCar=!invincible||(frame%6<3);
+    if(showCar){
+      drawCar(car.x,car.y);
+      if(frame%3<2){const fl=Math.random()*8+5;const eg=ctx.createLinearGradient(car.x,car.y+car.h-8,car.x,car.y+car.h+fl);eg.addColorStop(0,'rgba(0,255,255,.6)');eg.addColorStop(.4,'rgba(168,85,247,.35)');eg.addColorStop(1,'transparent');ctx.fillStyle=eg;ctx.beginPath();ctx.moveTo(car.x-3,car.y+car.h-8);ctx.lineTo(car.x+3,car.y+car.h-8);ctx.lineTo(car.x+(Math.random()-.5)*4,car.y+car.h+fl);ctx.closePath();ctx.fill()}
+    }
+    // ★ 무적 시 보호막 이펙트
+    if(invincible){
+      ctx.save();ctx.globalAlpha=0.15+Math.sin(frame*0.3)*0.1;
+      ctx.strokeStyle='#ff00aa';ctx.lineWidth=2;ctx.shadowColor='#ff00aa';ctx.shadowBlur=15;
+      ctx.beginPath();ctx.ellipse(car.x,car.y+car.h/2-8,car.w/2+8,car.h/2+6,0,0,6.28);ctx.stroke();
+      ctx.restore();
+    }
+  }
   for(const p of particles){ctx.save();ctx.globalAlpha=p.life;ctx.fillStyle=p.c;ctx.shadowColor=p.c;ctx.shadowBlur=8;ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,6.28);ctx.fill();ctx.restore()}
   const vt=ctx.createLinearGradient(0,0,0,40);vt.addColorStop(0,'rgba(3,3,20,.4)');vt.addColorStop(1,'transparent');ctx.fillStyle=vt;ctx.fillRect(0,0,W,40);
   requestAnimationFrame(()=>loop(gen));

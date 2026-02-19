@@ -11,6 +11,7 @@
   body{background:#020210;font-family:'Rajdhani',sans-serif}
   #wrap{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden}
   canvas{display:block;width:100%;height:100%;will-change:transform;transform:translate3d(0,0,0)}
+  /* ═══ HUD ═══ */
   #hud{position:absolute;top:max(1.5vh,env(safe-area-inset-top,0px));left:0;right:0;display:flex;justify-content:space-between;padding:0 2vw;pointer-events:none;z-index:2}
   .hb{background:rgba(5,5,20,0.75);border:1px solid rgba(0,255,255,0.25);border-radius:6px;padding:0.6vh 1.2vw;color:rgba(0,255,255,0.7);font-family:'Orbitron',monospace;font-size:clamp(11px,1.3vw,18px);backdrop-filter:blur(6px);box-shadow:0 0 12px rgba(0,255,255,0.08);text-shadow:0 0 6px rgba(0,255,255,0.3)}
   .hb span{color:#0ff;font-weight:700;font-size:clamp(14px,1.8vw,26px)}
@@ -20,6 +21,7 @@
   .ht.off{color:rgba(60,20,40,0.4);filter:none;transform:scale(0.8);text-shadow:none}
   .ht.pop{animation:htPop .5s ease-out forwards}
   @keyframes htPop{0%{transform:scale(1.5);color:#ff00aa;filter:drop-shadow(0 0 16px #ff00aa)}40%{transform:scale(0.6)}100%{transform:scale(0.8);color:rgba(60,20,40,0.4);filter:none}}
+  /* ═══ 오버레이 ═══ */
   .ov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;background:rgba(3,3,14,0.88);z-index:10;backdrop-filter:blur(10px)}
   #os{display:none}#ni{display:none;z-index:20}
   .tt{font-family:'Orbitron',monospace;font-size:clamp(28px,4.5vw,56px);font-weight:900;letter-spacing:clamp(4px,0.6vw,10px);background:linear-gradient(90deg,#0ff,#a855f7,#0ff);background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:sh 3s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(0,255,255,0.4));margin-bottom:4px}
@@ -47,8 +49,12 @@
   .lb-loading{text-align:center;color:rgba(0,255,255,0.4);font-size:clamp(10px,1vw,14px);padding:1.5vh 0;font-style:italic}
   .lb-loading::after{content:'';display:inline-block;width:12px;height:12px;border:2px solid rgba(0,255,255,0.3);border-top-color:#0ff;border-radius:50%;animation:lbSpin .8s linear infinite;margin-left:6px;vertical-align:middle}
   @keyframes lbSpin{to{transform:rotate(360deg)}}
-  .lb-err{text-align:center;color:rgba(255,0,170,0.5);font-size:clamp(9px,.9vw,13px);padding:1vh 0;font-style:italic}
-  /* ═══ 이름 입력 모달 ═══ */
+  .lb-err{text-align:center;color:rgba(255,0,170,0.5);font-size:clamp(9px,.9vw,13px);padding:1vh 0;font-style:italic;line-height:1.5}
+  /* ═══ 색인 오류 안내 배너 ═══ */
+  .idx-alert{display:none;position:fixed;top:0;left:0;right:0;background:rgba(255,0,170,0.15);border-bottom:2px solid #ff00aa;padding:10px 16px;font-family:'Rajdhani',sans-serif;font-size:clamp(12px,1.2vw,16px);color:#ff8ed4;text-align:center;z-index:100;backdrop-filter:blur(8px);line-height:1.6}
+  .idx-alert strong{color:#ff00aa}
+  .idx-alert .idx-close{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#ff00aa;font-size:20px;line-height:1}
+  /* ═══ 이름 입력 ═══ */
   .ni-box{background:rgba(8,4,28,0.95);border:1px solid rgba(0,255,255,0.2);border-radius:8px;padding:3vh 3vw;text-align:center;box-shadow:0 0 40px rgba(0,255,255,0.08)}
   .ni-title{font-family:'Orbitron',monospace;font-size:clamp(14px,1.6vw,22px);font-weight:700;color:#0ff;letter-spacing:2px;margin-bottom:.5vh}
   .ni-sub{font-size:clamp(11px,1.2vw,16px);color:rgba(168,85,247,0.5);margin-bottom:1.5vh}
@@ -92,7 +98,7 @@
   .bb-rivet{position:absolute;width:5px;height:5px;border-radius:50%;z-index:8;background:radial-gradient(circle at 35% 35%,#5a5a70,#2a2a40);border:1px solid rgba(0,255,255,0.06)}
   .bb-rivet.rtl{top:4%;left:2%}.bb-rivet.rtr{top:4%;right:2%}.bb-rivet.rbl{bottom:15%;left:2%}.bb-rivet.rbr{bottom:15%;right:2%}
   /* ═══ 모바일 D-Pad ═══ */
-  .touch-zone{display:none;position:absolute;bottom:120px;bottom:calc(120px + env(safe-area-inset-bottom,0px));bottom:max(120px, calc(15vh + env(safe-area-inset-bottom,0px)));left:50%;transform:translateX(-50%) translate3d(0,0,0);z-index:4;pointer-events:auto;opacity:.6;will-change:transform}
+  .touch-zone{display:none;position:absolute;bottom:120px;bottom:calc(120px + env(safe-area-inset-bottom,0px));bottom:max(120px,calc(15vh + env(safe-area-inset-bottom,0px)));left:50%;transform:translateX(-50%) translate3d(0,0,0);z-index:4;pointer-events:auto;opacity:.6;will-change:transform}
   .touch-zone .dpad{position:relative;width:clamp(150px,32vw,220px);height:clamp(150px,32vw,220px)}
   .touch-zone .dbtn{position:absolute;background:rgba(0,255,255,0.08);border:1.5px solid rgba(0,255,255,0.35);border-radius:10px;display:flex;align-items:center;justify-content:center;color:rgba(0,255,255,0.7);font-size:clamp(20px,4.5vw,30px);user-select:none;-webkit-user-select:none;touch-action:manipulation;min-width:48px;min-height:48px;-webkit-tap-highlight-color:transparent;transition:background .05s,border-color .05s}
   .touch-zone .dbtn:active,.touch-zone .dbtn.pressed{background:rgba(0,255,255,0.35);border-color:#0ff;box-shadow:0 0 12px rgba(0,255,255,0.4),inset 0 0 8px rgba(0,255,255,0.15);color:#0ff}
@@ -103,6 +109,13 @@
 </style>
 </head>
 <body>
+<!-- ═══ 색인 오류 안내 배너 ═══ -->
+<div class="idx-alert" id="idxAlert">
+  <strong>⚠ Firestore 색인(Index) 필요!</strong><br>
+  브라우저 콘솔(F12)을 열고, 에러 메시지의 링크를 클릭하여 색인을 생성하세요.
+  <span class="idx-close" id="idxClose">✕</span>
+</div>
+
 <div id="wrap">
   <canvas id="c"></canvas>
   <div id="hud">
@@ -161,7 +174,7 @@
   </div>
 </div>
 
-<!-- ═══ YouTube IFrame API (전역 콜백 필요) ═══ -->
+<!-- ═══ YouTube IFrame API ═══ -->
 <script>
 var musicOn=true,ytReady=false,ytP=null,ytRetryCount=0,YT_ID='eHCYzIu-ij4';
 var ytTag=document.createElement('script');ytTag.src='https://www.youtube.com/iframe_api';document.head.appendChild(ytTag);
@@ -186,17 +199,22 @@ function createPlayer(){
 }
 function playMusic(){if(!musicOn)return;if(ytReady&&ytP){try{ytP.setVolume(100);ytP.unMute();ytP.playVideo()}catch(e){}}else{setTimeout(playMusic,500)}}
 function stopMusic(){if(ytReady&&ytP)try{ytP.mute()}catch(e){}}
+document.getElementById('idxClose').addEventListener('click',function(){document.getElementById('idxAlert').style.display='none'});
 </script>
 
-<!-- ═══════════════════════════════════════════════════
-     ★★★ Firebase Modular SDK v10+ & 게임 엔진 ★★★
-     (type="module": addDoc, query, orderBy, limit, getDocs)
-     ═══════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════
+     ★ Firebase Modular SDK v10+ & Game Engine (type="module") ★
+     initializeFirestore + longPolling + onSnapshot
+     ═══════════════════════════════════════════════════════════ -->
 <script type="module">
-// ═══ Firebase v10+ 모듈 임포트 ═══
+// ═══ Firebase v10+ Modular Imports ═══
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{initializeFirestore,collection,addDoc,query,orderBy,limit,onSnapshot,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ═══════════════════════════════════════════
+// ★ [0순위] initializeFirestore + longPolling
+// ★ ERR_QUIC_PROTOCOL_ERROR 방지
+// ═══════════════════════════════════════════
 let db=null,fbReady=false;
 try{
   const app=initializeApp({
@@ -207,12 +225,15 @@ try{
     messagingSenderId:"200881814519",
     appId:"1:200881814519:web:4ef37fc6f4c6c5c1baccf2"
   });
-  db=getFirestore(app);
+  db=initializeFirestore(app,{
+    experimentalForceLongPolling:true,
+    useFetchStreams:false
+  });
   fbReady=true;
-  console.log('[Firebase] ✅ Firestore 모듈 연결');
+  console.log('[Firebase] ✅ Firestore 연결 (LongPolling 모드)');
 }catch(e){console.error('[Firebase] ❌ 초기화 실패:',e)}
 
-// ═══ Firestore CRUD (No localStorage) ═══
+// ═══ Firestore: addDoc 저장 ═══
 async function fbSaveScore(nickname,sc){
   if(!fbReady)throw new Error('Firestore unavailable');
   await addDoc(collection(db,'leaderboard'),{
@@ -222,16 +243,60 @@ async function fbSaveScore(nickname,sc){
   });
   console.log('[Firestore] ✅ addDoc:',nickname,sc);
 }
-async function fbLoadTop10(){
-  if(!fbReady)return[];
+
+// ═══════════════════════════════════════════
+// ★ [0순위] onSnapshot 실시간 리스닝
+// ═══════════════════════════════════════════
+let liveTop10=[];
+let snapshotUnsub=null;
+let indexErrorShown=false;
+
+function startRealtimeLeaderboard(){
+  if(!fbReady||!db)return;
   try{
     const q=query(collection(db,'leaderboard'),orderBy('score','desc'),limit(10));
-    const snap=await getDocs(q);
-    const list=[];
-    snap.forEach(doc=>{const d=doc.data();list.push({nickname:d.nickname||'???',score:d.score||0})});
-    return list;
-  }catch(e){console.warn('[Firestore] 읽기 에러:',e);return[]}
+    snapshotUnsub=onSnapshot(q,
+      function onNext(snap){
+        liveTop10=[];
+        snap.forEach(doc=>{const d=doc.data();liveTop10.push({nickname:d.nickname||'???',score:d.score||0})});
+        console.log('[onSnapshot] 🔄 실시간 갱신:',liveTop10.length,'건');
+        renderAllLeaderboards(null);
+      },
+      function onError(err){
+        console.error('[onSnapshot] ❌ 에러:',err);
+        const errMsg=err.message||'';
+        if(errMsg.includes('index')||errMsg.includes('Index')||errMsg.includes('requires an index')){
+          if(!indexErrorShown){
+            indexErrorShown=true;
+            document.getElementById('idxAlert').style.display='block';
+            console.error('[Firebase] ⚠ 색인이 필요합니다. 위 에러 메시지의 URL을 클릭하여 Firestore 색인을 생성하세요.');
+          }
+        }
+      }
+    );
+  }catch(e){
+    console.error('[onSnapshot] 구독 실패:',e);
+  }
 }
+
+// ═══ 리더보드 렌더링 ═══
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function lbBuildHTML(data,hl){
+  if(!data||!data.length)return'<div class="lb-wrap"><div class="lb-title">🌐 WORLD RANKING</div><div class="lb-empty">No records yet</div></div>';
+  let h='<div class="lb-wrap"><div class="lb-title">🌐 WORLD RANKING</div>';
+  for(let i=0;i<data.length;i++){
+    const e=data[i],rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const isH=hl!=null&&e.score===hl;
+    h+='<div class="lb-row'+(isH?' highlight':'')+'"><div class="lb-rank '+rc+'">'+(i+1)+'</div><div class="lb-name">'+escH(e.nickname)+'</div><div class="lb-score'+(isH?' lb-new':'')+'">'+e.score+'</div></div>';
+  }
+  return h+'</div>';
+}
+function renderAllLeaderboards(hl){
+  const html=lbBuildHTML(liveTop10,hl);
+  const ssEl=document.getElementById('ssLB');if(ssEl)ssEl.innerHTML=html;
+  const osEl=document.getElementById('osLB');if(osEl)osEl.innerHTML=html;
+}
+function lbRenderLoading(tid){const el=document.getElementById(tid);if(el)el.innerHTML='<div class="lb-wrap"><div class="lb-title">🌐 WORLD RANKING</div><div class="lb-loading">Connecting</div></div>'}
 
 // ═══ 기기 감지 & 품질 ═══
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
@@ -269,10 +334,8 @@ function calcLayout(){
 calcLayout();
 
 // ═══ 게임 상태 ═══
-const LB_MAX=10;
 let generation=0,run=0,dead=0,score=0,speed=1.5,frame=0,lastLv=0,roadOff=0,gridOff=0;
-const kp={};
-const car={x:0,y:0,w:0,h:0};
+const kp={};const car={x:0,y:0,w:0,h:0};
 function initCarSize(){car.w=Math.round(38*S);car.h=Math.round(72*S)}
 initCarSize();car.x=W/2;car.y=H-Math.round(110*S);
 let obstacles=[],particles=[],pendingScore=null;
@@ -280,7 +343,6 @@ const MAX_LIVES=3;let lives=3,isInvincible=false,invTimer=0;const INV_DURATION=9
 
 // ★ deltaTime
 let lastTime=0;const TARGET_FPS=60,TARGET_DT=1000/TARGET_FPS;let dt=1;
-// ★ 스폰 누적기
 let spawnAccum=0;
 
 // ═══ 3축 동적 난이도 ═══
@@ -296,27 +358,6 @@ function getDifficulty(){
 function onLayoutChange(){const oW=W,oH=H;calcLayout();initCarSize();if(oW>0&&oH>0){car.x*=(W/oW);car.y*=(H/oH)}initBld()}
 window.addEventListener('resize',onLayoutChange);
 if(window.visualViewport)window.visualViewport.addEventListener('resize',onLayoutChange);
-
-// ═══ 리더보드 렌더링 (Firestore Only) ═══
-function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function lbRenderData(tid,data,hl){
-  const el=document.getElementById(tid);if(!el)return;
-  if(!data||!data.length){el.innerHTML='<div class="lb-wrap"><div class="lb-title">WORLD TOP 10 🌐</div><div class="lb-empty">No records yet</div></div>';return}
-  let h='<div class="lb-wrap"><div class="lb-title">WORLD TOP 10 🌐</div>';
-  for(let i=0;i<data.length;i++){
-    const e=data[i],rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    const isH=hl!=null&&e.score===hl;
-    h+='<div class="lb-row'+(isH?' highlight':'')+'"><div class="lb-rank '+rc+'">'+(i+1)+'</div><div class="lb-name">'+escH(e.nickname)+'</div><div class="lb-score'+(isH?' lb-new':'')+'">'+e.score+'</div></div>';
-  }
-  el.innerHTML=h+'</div>';
-}
-function lbRenderLoading(tid){const el=document.getElementById(tid);if(el)el.innerHTML='<div class="lb-wrap"><div class="lb-title">WORLD TOP 10 🌐</div><div class="lb-loading">Loading</div></div>'}
-function lbRenderError(tid,msg){const el=document.getElementById(tid);if(el)el.innerHTML='<div class="lb-wrap"><div class="lb-title">WORLD TOP 10 🌐</div><div class="lb-err">'+escH(msg)+'</div></div>'}
-async function lbRender(tid,hl){
-  lbRenderLoading(tid);
-  try{const data=await fbLoadTop10();lbRenderData(tid,data,hl)}
-  catch(e){lbRenderError(tid,'서버 연결 실패')}
-}
 
 // ═══ 빌딩 ═══
 let bldL=[],bldR=[];
@@ -391,11 +432,12 @@ async function submitName(){
   const btn=document.getElementById('niBtn');btn.classList.add('ni-saving');btn.textContent='SAVING...';
   try{await fbSaveScore(nickname,pendingScore)}catch(e){console.warn('[Save Error]',e)}
   document.getElementById('ni').style.display='none';btn.classList.remove('ni-saving');btn.textContent='SAVE';
-  await showGameOver(pendingScore);pendingScore=null;
+  showGameOver(pendingScore);pendingScore=null;
 }
-async function showGameOver(sc){
-  document.getElementById('fsc').textContent=sc;lbRenderLoading('osLB');
-  document.getElementById('os').style.display='flex';await lbRender('osLB',sc);
+function showGameOver(sc){
+  document.getElementById('fsc').textContent=sc;
+  renderAllLeaderboards(sc);
+  document.getElementById('os').style.display='flex';
 }
 
 // ═══ 스폰 ═══
@@ -439,9 +481,7 @@ function drawCar(x,y){ctx.save();ctx.translate(x,y);ctx.scale(S,S);const ug=ctx.
 function drawObs(o){ctx.save();ctx.translate(o.x,o.y);ctx.scale(S,S);if(o.type==='cone'){ctx.save();ctx.fillStyle='#ff6600';if(Q){ctx.shadowColor='#ff6600';ctx.shadowBlur=10}ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(-11,13);ctx.lineTo(11,13);ctx.closePath();ctx.fill();ctx.restore();ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.moveTo(-4,-2);ctx.lineTo(-7,6);ctx.lineTo(7,6);ctx.lineTo(4,-2);ctx.closePath();ctx.fill();ctx.fillStyle='#ff5500';ctx.fillRect(-13,11,26,5)}else if(o.type==='rock'){ctx.save();ctx.fillStyle='#3a3a50';if(Q){ctx.shadowColor='rgba(168,85,247,.25)';ctx.shadowBlur=8}ctx.beginPath();ctx.moveTo(-14,4);ctx.lineTo(-10,-10);ctx.lineTo(-2,-14);ctx.lineTo(8,-12);ctx.lineTo(16,-4);ctx.lineTo(14,8);ctx.lineTo(6,14);ctx.lineTo(-8,12);ctx.closePath();ctx.fill();ctx.restore();ctx.fillStyle='#4a4a60';ctx.beginPath();ctx.moveTo(-8,-2);ctx.lineTo(-4,-10);ctx.lineTo(4,-10);ctx.lineTo(2,-2);ctx.closePath();ctx.fill()}else{const obg=ctx.createLinearGradient(-12,0,12,0);obg.addColorStop(0,'#221540');obg.addColorStop(.5,'#301a58');obg.addColorStop(1,'#221540');ctx.save();ctx.fillStyle=obg;if(Q){ctx.shadowColor='#a855f7';ctx.shadowBlur=10}ctx.beginPath();ctx.ellipse(0,0,13,16,0,0,6.28);ctx.fill();ctx.restore();ctx.save();ctx.strokeStyle='#0ff';ctx.lineWidth=1.5;if(Q){ctx.shadowColor='#0ff';ctx.shadowBlur=6}ctx.beginPath();ctx.moveTo(-13,-4);ctx.lineTo(13,-4);ctx.stroke();ctx.beginPath();ctx.moveTo(-13,4);ctx.lineTo(13,4);ctx.stroke();ctx.restore();ctx.fillStyle='#ff00aa';ctx.font='bold 12px Orbitron';ctx.textAlign='center';ctx.fillText('!',0,4)}ctx.restore()}
 function collides(a,b){const pad=Math.round(10*S);return Math.abs(a.x-b.x)<(a.w/2+b.w/2-pad)&&Math.abs((a.y+a.h/2)-b.y)<(a.h/2+b.h/2-pad)}
 
-// ═══════════════════════════════════════
-// ★★★ 메인 루프 (deltaTime) ★★★
-// ═══════════════════════════════════════
+// ═══ 메인 루프 ═══
 function loop(gen,now){
   if(gen!==generation)return;
   if(!lastTime)lastTime=now;
@@ -482,7 +522,6 @@ function loop(gen,now){
   for(let pi=particles.length-1;pi>=0;pi--){const p=particles[pi];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=.02*dt;if(p.life<=0)particles.splice(pi,1)}
   if(run||dead){updBld(bldL,'l');updBld(bldR,'r')}
 
-  // ═══ 렌더 ═══
   ctx.clearRect(0,0,W,H);drawBg();drawRoad();drawScrollBld(bldL);drawScrollBld(bldR);drawMono();
   for(let si=0;si<obstacles.length;si++){const so=obstacles[si];if(so.y+so.h<-20||so.y>H+40)continue;ctx.fillStyle='rgba(168,85,247,.03)';ctx.beginPath();ctx.ellipse(so.x+3*S,so.y+so.h/2+5*S,so.w/2,5*S,0,0,6.28);ctx.fill()}
   for(let di=0;di<obstacles.length;di++){if(obstacles[di].y+obstacles[di].h<-20||obstacles[di].y>H+40)continue;drawObs(obstacles[di])}
@@ -497,11 +536,11 @@ function loop(gen,now){
   requestAnimationFrame(t=>loop(gen,t));
 }
 
-// ═══ 초기화: Firestore에서 World Top 10 로드 ═══
-(async function init(){
+// ═══ 초기화 ═══
+(function init(){
   lbRenderLoading('ssLB');
   drawBg();drawRoad();drawScrollBld(bldL);drawScrollBld(bldR);
-  await lbRender('ssLB',null);
+  startRealtimeLeaderboard();
 })();
 </script>
 </body>

@@ -184,23 +184,51 @@ function b64u(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).repl
 async function pkce(){const v=b64u(crypto.getRandomValues(new Uint8Array(64)));sessionStorage.setItem('sp_v',v);const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));return{v,c:b64u(d)}}
 async function spLogin(){const{c}=await pkce();location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({client_id:SP_ID,response_type:'code',redirect_uri:SP_RD,scope:SP_SC,code_challenge_method:'S256',code_challenge:c})}
 async function spExch(code){const v=sessionStorage.getItem('sp_v');if(!v)return null;const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:SP_ID,grant_type:'authorization_code',code,redirect_uri:SP_RD,code_verifier:v})});if(!r.ok)return null;const d=await r.json();sessionStorage.removeItem('sp_v');return d.access_token}
+function spErr(msg){$('spS').className='sps off';$('spS').textContent='✕ '+msg;console.error('[Spotify]',msg)}
+async function transferPlayback(play){
+  if(!spDev||!spTk)return false;
+  try{
+    const r=await fetch('https://api.spotify.com/v1/me/player',{method:'PUT',headers:{Authorization:'Bearer '+spTk,'Content-Type':'application/json'},body:JSON.stringify({device_ids:[spDev],play:!!play})});
+    if(r.status===403){spErr('프리미엄 계정 여부를 확인하세요');return false}
+    if(r.status===401){spErr('토큰 만료 — 다시 로그인해주세요');return false}
+    if(!r.ok&&r.status!==204){spErr('기기 전환 실패 ('+r.status+')');return false}
+    console.log('[Spotify] ✅ Transfer OK (play='+play+')');return true;
+  }catch(e){spErr('스포티파이 연결 실패: 다시 로그인해주세요');return false}
+}
 function spInit(tk){
   if(!window.Spotify)return;
   spPl=new Spotify.Player({name:'PLAVE Racing',getOAuthToken:cb=>cb(tk),volume:.8});
-  spPl.addListener('ready',({device_id})=>{spDev=device_id;spOk=true;console.log('[Spotify] ✅ Ready:',device_id);$('spS').className='sps on';$('spS').textContent='● SPOTIFY 연결됨 (Premium)';unlock()});
-  spPl.addListener('not_ready',()=>{spOk=false});
+  spPl.addListener('ready',async({device_id})=>{
+    spDev=device_id;spOk=true;
+    console.log('[Spotify] ✅ SDK Ready, device:',device_id);
+    const ok=await transferPlayback(false);
+    if(ok){$('spS').className='sps on';$('spS').textContent='● SPOTIFY 연결됨 (Premium)';unlock()}
+  });
+  spPl.addListener('not_ready',()=>{spOk=false;spErr('기기 오프라인 — 새로고침하세요')});
   spPl.addListener('player_state_changed',st=>{if(!st)return;const t=st.track_window.current_track;if(t){$('spT').textContent='♫ '+t.name+' — '+t.artists[0].name;$('spN').style.display='flex'}});
-  spPl.addListener('initialization_error',({message:m})=>console.error('[Spotify] Init:',m));
-  spPl.addListener('authentication_error',({message:m})=>console.error('[Spotify] Auth:',m));
-  spPl.addListener('account_error',({message:m})=>{console.error('[Spotify] Premium필요:',m);alert('Spotify Premium 계정이 필요합니다.')});
-  spPl.connect();
+  spPl.addListener('initialization_error',({message:m})=>spErr('SDK 초기화 실패'));
+  spPl.addListener('authentication_error',({message:m})=>spErr('인증 실패 — 다시 로그인해주세요'));
+  spPl.addListener('account_error',({message:m})=>spErr('Premium 계정이 필요합니다'));
+  spPl.connect().then(ok=>{if(!ok)spErr('SDK 연결 실패')});
 }
 async function spPlay(){
   if(!spOk||!spDev||!spTk)return;
-  try{await fetch('https://api.spotify.com/v1/me/player',{method:'PUT',headers:{Authorization:'Bearer '+spTk,'Content-Type':'application/json'},body:JSON.stringify({device_ids:[spDev],play:false})});
-  await fetch('https://api.spotify.com/v1/me/player/play?device_id='+spDev,{method:'PUT',headers:{Authorization:'Bearer '+spTk,'Content-Type':'application/json'},body:JSON.stringify({uris:[SP_URI]})});spOn=true}catch(e){console.warn('[Spotify] Play err:',e)}}
+  try{
+    if(spPl&&spPl.activateElement)await spPl.activateElement();
+    const tok=await transferPlayback(true);
+    if(!tok)return;
+    const r=await fetch('https://api.spotify.com/v1/me/player/play?device_id='+spDev,{method:'PUT',headers:{Authorization:'Bearer '+spTk,'Content-Type':'application/json'},body:JSON.stringify({uris:[SP_URI]})});
+    if(r.ok||r.status===204){spOn=true;console.log('[Spotify] ▶ Playing')}
+    else if(r.status===403)spErr('프리미엄 계정 여부를 확인하세요');
+    else if(r.status===401)spErr('토큰 만료 — 다시 로그인해주세요');
+    else spErr('재생 실패 ('+r.status+')');
+  }catch(e){spErr('스포티파이 연결 실패: 다시 로그인해주세요')}
+}
 async function spPause(){if(spPl)try{await spPl.pause()}catch(e){}}
-async function spResume(){if(spPl)try{await spPl.resume()}catch(e){}}
+async function spResume(){
+  if(!spPl)return;
+  try{if(spPl.activateElement)await spPl.activateElement();await spPl.resume()}catch(e){}
+}
 window.onSpotifyWebPlaybackSDKReady=()=>{if(spTk)spInit(spTk)};
 (async()=>{const p=new URLSearchParams(location.search);const code=p.get('code');if(code){history.replaceState({},'',location.pathname);const tk=await spExch(code);if(tk){spTk=tk;if(window.Spotify)spInit(tk)}}})();
 
@@ -300,8 +328,8 @@ function spawnM(n){const ts=['cone','rock','barrel'],used=[];for(let i=0;i<n;i++
 function showLv(){const e=$('lu');e.style.opacity='1';setTimeout(()=>e.style.opacity='0',1200)}
 
 function resetAll(){gen++;run=1;dead=0;score=0;speed=1.5;frm=0;lastLv=0;rOff=0;gOff=0;spAcc=0;lt=0;calc();initC();car.x=W/2;car.y=H-Math.round(110*S);obs=[];ptc=[];lives=3;isInv=false;invT=0;hitLk=false;for(const k in kp)kp[k]=0;dp.up=0;dp.down=0;dp.left=0;dp.right=0;initBld();mono={x:-Math.round(220*S),y:0,sp:.6*S,on:0,t:0};$('sv').textContent='0';$('spd').textContent='60';updH()}
-function startG(){$('ss').style.display='none';$('ni').style.display='none';resetAll();if(spOk&&spTk)spPlay();lt=performance.now();requestAnimationFrame(t=>loop(gen,t))}
-function restart(){$('os').style.display='none';$('ni').style.display='none';resetAll();if(spOk&&spOn)spResume();lt=performance.now();requestAnimationFrame(t=>loop(gen,t))}
+function startG(){$('ss').style.display='none';$('ni').style.display='none';resetAll();if(spOk&&spTk){if(spPl&&spPl.activateElement)spPl.activateElement();spPlay()}lt=performance.now();requestAnimationFrame(t=>loop(gen,t))}
+function restart(){$('os').style.display='none';$('ni').style.display='none';resetAll();if(spOk&&spOn){if(spPl&&spPl.activateElement)spPl.activateElement();spResume()}lt=performance.now();requestAnimationFrame(t=>loop(gen,t))}
 
 function dBg(){cx.fillStyle='#04041a';cx.fillRect(0,0,W,H)}
 function dBld(a){for(let i=0;i<a.length;i++){const b=a[i];if(b.y+b.h<-10||b.y>H+10)continue;const bg=cx.createLinearGradient(b.x,b.y,b.x+b.w,b.y+b.h);bg.addColorStop(0,b.bc);bg.addColorStop(1,'#040412');cx.fillStyle=bg;cx.fillRect(b.x,b.y,b.w,b.h);cx.strokeStyle='rgba(0,255,255,.04)';cx.lineWidth=.5;cx.strokeRect(b.x,b.y,b.w,b.h);if(b.wn){const ww=4*S,wh=5*S,gX=Math.max(6*S,(b.w-4*S)/b.wc),gY=Math.max(8*S,(b.h-6*S)/b.wr);if(WD){for(let r=0;r<b.wr;r++)for(let c=0;c<b.wc;c++){const wx=b.x+3*S+c*gX,wy=b.y+4*S+r*gY;if(wy<b.y||wy+wh>b.y+b.h)continue;if(Math.sin(wx*5.3+wy*3.7+frm*.001)>.1){cx.fillStyle='rgba(0,255,255,'+(.03+Math.sin(wx*.3+wy*.2+frm*.004)*.02)+')';cx.fillRect(wx,wy,ww,wh)}}}else{cx.fillStyle='rgba(0,255,255,.035)';for(let r=0;r<b.wr;r+=2)for(let c=0;c<b.wc;c+=2){const wx=b.x+3*S+c*gX,wy=b.y+4*S+r*gY;if(wy>=b.y&&wy+wh<=b.y+b.h)cx.fillRect(wx,wy,ww,wh)}}}for(let ni=0;ni<b.ns.length;ni++){const n=b.ns[ni];n.b+=n.sp;const na=.4+Math.sin(n.b)*.4,ny=b.y+b.h*n.ry,nw=b.w*n.rw,nx=b.x+(b.w-nw)/2;if(ny<b.y||ny>b.y+b.h)continue;cx.save();cx.globalAlpha=na*.8;if(ND){cx.shadowColor=n.c;cx.shadowBlur=14*S}cx.fillStyle=n.c;cx.fillRect(nx,ny,nw,2.5*S);cx.restore()}}}
